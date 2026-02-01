@@ -111,8 +111,6 @@ If you find Net Bar useful, please consider supporting its development.
 | **Ethereum (ETH)** | `0x51bc91022E2dCef9974D5db2A0e22d57B360e700` |
 | **Solana (SOL)** | `9wjca3EQnEiqzqgy7N5iqS1JGXJiknMQv6zHgL96t94S` |
 
-[Visit Support Website](https://support.iad1tya.cyou)
-
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=iad1tya/net-bar&type=timeline&logscale&legend=top-left)](https://www.star-history.com/#iad1tya/net-bar&type=timeline&logscale&legend=top-left)
