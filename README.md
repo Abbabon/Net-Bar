@@ -20,14 +20,8 @@
 **Net Bar** is your all-in-one menu bar dashboard. Beyond just tracking download and upload speeds, it now provides a comprehensive view of your Mac's health. Monitor **CPU usage, Memory pressure, Disk storage, Battery status, and Thermal state** at a glance. Access detailed diagnostics and customize the layout to fit your needs with a single click.
 
 ## Screenshots
-
-<p align="center">
-  <img src="Screenshots/sc-1.png" alt="Net Bar Dashboard" width="80%" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
-</p>
-
 <p align="center">
   <img src="Screenshots/sc-2.png" alt="Net Bar Settings" width="45%" style="border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-right: 10px;">
-  <img src="Screenshots/sc-3.png" alt="Net Bar Menu" width="45%" style="border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
 </p>
 
 ## Features
