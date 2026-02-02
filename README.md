@@ -9,15 +9,15 @@
 </p>
 
 <p align="center">
-  <b>A lightweight, aesthetically pleasing network speed monitor for the macOS menu bar.</b>
+  <b>A lightweight, aesthetically pleasing system and network monitor for the macOS menu bar.</b>
   <br>
-  Real-time download/upload speeds • Detailed diagnostics • Fully customizable
+  Real-time Network Speeds • System Stats (CPU/RAM/Battery) • Detailed Diagnostics • Fully Customizable
 </p>
 
 
 ## Overview
 
-Net Bar provides real-time network monitoring directly in your menu bar. It allows users to view download and upload speeds at a glance and access detailed network diagnostics with a single click.
+**Net Bar** is your all-in-one menu bar dashboard. Beyond just tracking download and upload speeds, it now provides a comprehensive view of your Mac's health. Monitor **CPU usage, Memory pressure, Disk storage, Battery status, and Thermal state** at a glance. Access detailed diagnostics and customize the layout to fit your needs with a single click.
 
 ## Screenshots
 
