@@ -33,7 +33,7 @@ struct DetailedStatusView: View {
                 VStack(alignment: .leading) {
                     Text("Net Bar")
                         .font(.headline)
-                    Text("Not Just Network Diagnostics")
+                    Text("Network Diagnostics")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -292,10 +292,8 @@ struct DetailedStatusView: View {
                     }
                      GridRow(alignment: .center) {
                         Text("Used").foregroundStyle(.secondary)
-                        Text(String(format: "%.2f GB", systemStatsService.stats.memoryUsed))
+                        Text(String(format: "%.2f GB / %.0f GB", systemStatsService.stats.memoryUsed, systemStatsService.stats.memoryTotal))
                             .foregroundStyle(.secondary).monospacedDigit()
-                         Text(String(format: "/ %.0f GB", systemStatsService.stats.memoryTotal))
-                             .foregroundStyle(.secondary).font(.body)
                     }
                 }
             }
