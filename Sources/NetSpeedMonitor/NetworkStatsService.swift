@@ -17,6 +17,10 @@ struct NetworkStats {
     var routerPing: Double = 0.0
     var routerJitter: Double = 0.0
     var routerLoss: Double = 0.0
+    var dns: String = ""
+    var dnsPing: Double = 0.0
+    var dnsJitter: Double = 0.0
+    var dnsLoss: Double = 0.0
 }
 
 class NetworkStatsService: NSObject, ObservableObject, CLLocationManagerDelegate {
@@ -36,6 +40,9 @@ class NetworkStatsService: NSObject, ObservableObject, CLLocationManagerDelegate
     // Ping variables
     private var pingBuffer: [Double] = []
     private var routerPingBuffer: [Double] = []
+    
+    @Published var dnsPingHistory: [Double] = []
+    private var dnsPingBuffer: [Double] = []
     
     override init() {
         super.init()
@@ -130,6 +137,24 @@ class NetworkStatsService: NSObject, ObservableObject, CLLocationManagerDelegate
                 }
             }
         }
+        
+        // DNS Ping
+        getDNSServer { [weak self] dns in
+            guard let self = self, let dns = dns, !dns.isEmpty else { return }
+            
+            DispatchQueue.main.async {
+                self.stats.dns = dns
+            }
+            
+            self.pingHost(dns) { latency, loss in
+                 DispatchQueue.main.async {
+                    self.stats.dnsPing = latency
+                    self.stats.dnsLoss = loss
+                    self.updateHistory(&self.dnsPingHistory, newValue: latency)
+                    self.calculateJitter(latency, buffer: &self.dnsPingBuffer, output: &self.stats.dnsJitter)
+                }
+            }
+        }
     }
     
     private func calculateJitter(_ currentPing: Double, buffer: inout [Double], output: inout Double) {
@@ -216,5 +241,40 @@ class NetworkStatsService: NSObject, ObservableObject, CLLocationManagerDelegate
                 completion(nil)
             }
         }
+    }
+    
+    private func getDNSServer(completion: @escaping (String?) -> Void) {
+         DispatchQueue.global(qos: .background).async {
+             let task = Process()
+             task.launchPath = "/usr/sbin/scutil"
+             task.arguments = ["--dns"]
+             
+             let pipe = Pipe()
+             task.standardOutput = pipe
+             
+             do {
+                 try task.run()
+                 task.waitUntilExit()
+                 
+                 let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                 if let output = String(data: data, encoding: .utf8) {
+                     // Look for "nameserver[0] : 1.2.3.4" inside "resolver #1" block usually
+                     // Simple parsing: find first "nameserver["
+                     let lines = output.components(separatedBy: "\n")
+                     for line in lines {
+                         if line.trimmingCharacters(in: .whitespaces).hasPrefix("nameserver[0]") {
+                             let components = line.components(separatedBy: ":")
+                             if components.count > 1 {
+                                 completion(components[1].trimmingCharacters(in: .whitespaces))
+                                 return
+                             }
+                         }
+                     }
+                 }
+                 completion(nil)
+             } catch {
+                 completion(nil)
+             }
+         }
     }
 }

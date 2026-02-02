@@ -30,13 +30,26 @@ struct DetailedStatusView: View {
             }
             Divider()
             
+            // Usage Header (SSID)
+            HStack {
+                 Circle()
+                     .fill(Color.green)
+                     .frame(width: 8, height: 8)
+                 Text(statsService.stats.ssid.isEmpty ? "Wi-Fi" : statsService.stats.ssid)
+                     .font(.headline)
+                 
+                 if !statsService.stats.band.isEmpty {
+                     Text(statsService.stats.band)
+                         .font(.caption)
+                         .padding(.horizontal, 6)
+                         .padding(.vertical, 2)
+                         .background(Color.gray.opacity(0.3))
+                         .cornerRadius(4)
+                 }
+            } 
+            
             // Traffic Section
             VStack(alignment: .leading) {
-                Text("Traffic")
-                    .font(.caption)
-                    .fontWeight(.bold)
-                    .foregroundStyle(.secondary)
-                    
                 Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
                     GridRow(alignment: .center) {
                         Text("Download")
@@ -162,11 +175,11 @@ struct DetailedStatusView: View {
                         Text("Jitter")
                             .foregroundStyle(.secondary)
                         Text(String(format: "%.1f ms", statsService.stats.routerJitter))
-                            .foregroundStyle(.red)
+                            .foregroundStyle(.yellow)
                             .monospacedDigit()
                          StatGraphView(
                             data: statsService.routerPingHistory.map { abs($0 - statsService.stats.routerPing) },
-                            color: .red,
+                            color: .yellow,
                             minRange: 0, maxRange: 50,
                             height: 16
                         )
@@ -183,6 +196,32 @@ struct DetailedStatusView: View {
                 }
             }
 
+            Divider()
+            
+            // DNS Section
+            VStack(alignment: .leading) {
+                Text("DNS Router Assigned")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.secondary)
+                
+                Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
+                     GridRow(alignment: .center) {
+                         Text(statsService.stats.dns.isEmpty ? "Unknown" : statsService.stats.dns)
+                             .foregroundStyle(.secondary)
+                         Text(String(format: "%.0f ms", statsService.stats.dnsPing))
+                             .foregroundStyle(.cyan)
+                             .monospacedDigit()
+                         StatGraphView(
+                             data: statsService.dnsPingHistory,
+                             color: .cyan,
+                             minRange: 0, maxRange: 100,
+                             height: 16
+                         )
+                     }
+                }
+            }
+            
             Divider()
             
             // Internet Section
