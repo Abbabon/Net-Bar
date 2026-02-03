@@ -79,81 +79,9 @@ struct SettingsView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             
-            Section("Behavior") {
+            Section("General") {
                 Toggle("Launch at Login", isOn: $menuBarState.autoLaunchEnabled)
                 
-
-            }
-            
-            Section("Appearance") {
-                Picker("Display Mode", selection: $displayMode) {
-                    Text("Both").tag(DisplayMode.both)
-                    Text("Download").tag(DisplayMode.downloadOnly)
-                    Text("Upload").tag(DisplayMode.uploadOnly)
-                }
-                .pickerStyle(.segmented)
-                
-                Toggle("Show Direction Arrows", isOn: $showArrows)
-            }
-                        Section("Display Sections") {
-                    Toggle("Traffic", isOn: $showTraffic)
-                    Toggle("Connection", isOn: $showConnection)
-                    Toggle("Router", isOn: $showRouter)
-                    Toggle("DNS", isOn: $showDNS)
-                    Toggle("Internet", isOn: $showInternet)
-                    Toggle("Smart Tips", isOn: $showTips)
-                    Toggle("Traffic Header Text", isOn: $showTrafficHeader)
-                }
-                
-                Section("Section Order") {
-                    ForEach(orderManager.sectionOrder.filter { isSectionEnabled($0) }, id: \.self) { item in
-                        HStack {
-                            Image(systemName: "line.3.horizontal")
-                                .foregroundStyle(.secondary)
-                            Text(item)
-                            Spacer()
-                        }
-                        .padding(.vertical, 4)
-                        .background(Color.clear) // Tappable area
-                        .contentShape(Rectangle())
-                        .onDrag {
-                            draggingItem = item
-                            return NSItemProvider(object: item as NSString)
-                        }
-                        .onDrop(of: [.text], delegate: DropRelocateDelegate(item: item, listData: $orderManager.sectionOrder, current: $draggingItem, changedView: $changedView))
-                    }
-                    
-                    Button("Reset Order") {
-                        orderManager.reset()
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                }
-                
-                Section("CPU") {
-                    Toggle("Show CPU Usage", isOn: $showCPU)
-                    Toggle("Show in Menu Bar", isOn: $menuBarState.showCPUMenu)
-                }
-                
-                Section("Memory") {
-                    Toggle("Show Memory Usage", isOn: $showMemory)
-                    Toggle("Show in Menu Bar", isOn: $menuBarState.showMemoryMenu)
-                }
-                
-                Section("Disk") {
-                    Toggle("Show Disk Usage", isOn: $showDisk)
-                    Toggle("Show in Menu Bar", isOn: $menuBarState.showDiskMenu)
-                }
-                
-                Section("Energy") {
-                    Toggle("Show Energy / Battery", isOn: $showEnergy)
-                }
-                
-                Section("Temperature") {
-                    Toggle("Show Temperature", isOn: $showTemp)
-                }
-                
-                Section("General") {
                 Picker("Unit Type", selection: $unitType) {
                     Text("Bytes (MB/s)").tag(UnitType.bytes)
                     Text("Bits (Mbps)").tag(UnitType.bits)
@@ -167,7 +95,16 @@ struct SettingsView: View {
                 }
             }
             
-            Section("Typography") {
+            Section("Menu Bar") {
+                Picker("Display Mode", selection: $displayMode) {
+                    Text("Both").tag(DisplayMode.both)
+                    Text("Download").tag(DisplayMode.downloadOnly)
+                    Text("Upload").tag(DisplayMode.uploadOnly)
+                }
+                .pickerStyle(.segmented)
+                
+                Toggle("Show Direction Arrows", isOn: $showArrows)
+
                 HStack {
                     Text("Font Size")
                     Spacer()
@@ -209,7 +146,58 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                         .frame(width: 40, alignment: .trailing)
                 }
+                
+
+                
+                Toggle("Show CPU in Menu Bar", isOn: $menuBarState.showCPUMenu)
+                Toggle("Show Memory in Menu Bar", isOn: $menuBarState.showMemoryMenu)
+                Toggle("Show Disk in Menu Bar", isOn: $menuBarState.showDiskMenu)
             }
+            Section("Popover Content") {
+                Toggle("Traffic", isOn: $showTraffic)
+                Toggle("Connection", isOn: $showConnection)
+                Toggle("Router", isOn: $showRouter)
+                Toggle("DNS", isOn: $showDNS)
+                Toggle("Internet", isOn: $showInternet)
+                Toggle("Smart Tips", isOn: $showTips)
+                Toggle("Traffic Header Text", isOn: $showTrafficHeader)
+                Toggle("CPU Usage", isOn: $showCPU)
+                Toggle("Memory Usage", isOn: $showMemory)
+                Toggle("Disk Usage", isOn: $showDisk)
+                Toggle("Energy / Battery", isOn: $showEnergy)
+                Toggle("Temperature", isOn: $showTemp)
+            }
+                
+                Section("Section Order") {
+                    ForEach(orderManager.sectionOrder.filter { isSectionEnabled($0) }, id: \.self) { item in
+                        HStack {
+                            Image(systemName: "line.3.horizontal")
+                                .foregroundStyle(.secondary)
+                            Text(item)
+                            Spacer()
+                        }
+                        .padding(.vertical, 4)
+                        .background(Color.clear) // Tappable area
+                        .contentShape(Rectangle())
+                        .onDrag {
+                            draggingItem = item
+                            return NSItemProvider(object: item as NSString)
+                        }
+                        .onDrop(of: [.text], delegate: DropRelocateDelegate(item: item, listData: $orderManager.sectionOrder, current: $draggingItem, changedView: $changedView))
+                    }
+                    
+                    Button("Reset Order") {
+                        orderManager.reset()
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                }
+                
+
+                
+
+            
+
             
             Section("Support") {
                 Link("Support the Developer", destination: URL(string: "https://support.iad1tya.cyou")!)
