@@ -1,3 +1,10 @@
+> [!TIP]
+> This application is free and under active development.  
+> Consider supporting via cryptocurrency or by buying me a coffee.  
+> Details are at the bottom of this README.
+
+
+
 <p align="center">
   <img src="assets/netbar.png" alt="Net Bar Icon" width="1280" height="640">
 </p>
