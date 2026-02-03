@@ -9,6 +9,7 @@ struct DetailedStatusView: View {
     @Environment(\.openWindow) var openWindow
     
     @State private var uptimeString: String = "00:00:00"
+    @State private var contentHeight: CGFloat = 600 // Default start height
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
       @AppStorage("showTrafficHeader") private var showTrafficHeader = true
@@ -108,8 +109,13 @@ struct DetailedStatusView: View {
             .buttonStyle(.plain)
         }
         .padding(16)
+        .background(GeometryReader { geometry in
+            Color.clear.preference(key: ViewHeightKey.self, value: geometry.size.height)
+        })
         } // ScrollView
-        .frame(width: 350, height: 600) // Fixed height for scrollable area
+        .onPreferenceChange(ViewHeightKey.self) { contentHeight = $0 }
+        .frame(width: 350)
+        .frame(height: min(contentHeight, 600))
         .background(Color(NSColor.windowBackgroundColor))
         .onReceive(timer) { input in
              let diff = input.timeIntervalSince(menuBarState.appLaunchDate)
@@ -359,5 +365,12 @@ struct DetailedStatusView: View {
         default:
              EmptyView()
         }
+    }
+}
+
+struct ViewHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
