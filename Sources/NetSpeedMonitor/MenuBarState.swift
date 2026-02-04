@@ -24,6 +24,7 @@ class MenuBarState: ObservableObject {
     @AppStorage("fontSize") var fontSize: Double = 9.0
     @AppStorage("textSpacing") var textSpacing: Double = 0.0
     @AppStorage("characterSpacing") var characterSpacing: Double = 0.0
+    @AppStorage("unstackNetworkUsage") var unstackNetworkUsage: Bool = false
     
     @AppStorage("showCPUMenu") var showCPUMenu: Bool = false
     @AppStorage("showMemoryMenu") var showMemoryMenu: Bool = false
@@ -36,7 +37,8 @@ class MenuBarState: ObservableObject {
             text: menuText,
             font: .monospacedSystemFont(ofSize: fontSize, weight: .semibold),
             spacing: textSpacing,
-            kern: characterSpacing
+            kern: characterSpacing,
+            maxWidth: unstackNetworkUsage ? 180 : nil
         )
     }
     
@@ -143,13 +145,20 @@ class MenuBarState: ObservableObject {
                         let (upVal, upUnit) = self.formatSpeed(self.uploadSpeed)
                         
                         var text = ""
+                        var networkSegments: [String] = []
                         
                         if self.displayMode == .both || self.displayMode == .uploadOnly {
-                            text += "\(self.showArrows ? "↑ " : "")\(upVal) \(upUnit)\n"
+                            networkSegments.append("\(self.showArrows ? "↑ " : "")\(upVal) \(upUnit)")
                         }
                         
                         if self.displayMode == .both || self.displayMode == .downloadOnly {
-                            text += "\(self.showArrows ? "↓ " : "")\(downVal) \(downUnit)"
+                            networkSegments.append("\(self.showArrows ? "↓ " : "")\(downVal) \(downUnit)")
+                        }
+                        
+                        if self.unstackNetworkUsage {
+                            text = networkSegments.joined(separator: " | ")
+                        } else {
+                            text = networkSegments.joined(separator: "\n")
                         }
                         
                         // System Stats

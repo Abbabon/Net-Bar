@@ -9,6 +9,7 @@ struct SettingsView: View {
     @AppStorage("fontSize") private var fontSize: Double = 9.0
     @AppStorage("textSpacing") private var textSpacing: Double = 0.0
     @AppStorage("characterSpacing") private var characterSpacing: Double = 0.0
+    @AppStorage("unstackNetworkUsage") private var unstackNetworkUsage: Bool = false
     
     // Visibility Toggles
     @AppStorage("showTraffic") private var showTraffic: Bool = true
@@ -104,6 +105,7 @@ struct SettingsView: View {
                 .pickerStyle(.segmented)
                 
                 Toggle("Show Direction Arrows", isOn: $showArrows)
+                Toggle("Unstack Network Usage", isOn: $unstackNetworkUsage)
 
                 HStack {
                     Text("Font Size")
