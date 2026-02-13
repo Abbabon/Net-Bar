@@ -96,6 +96,23 @@ struct SettingsView: View {
                 }
             }
             
+            Section {
+                Button(role: .destructive) {
+                    menuBarState.totalDownload = 0
+                    menuBarState.totalUpload = 0
+                    menuBarState.appLaunchDate = Date().timeIntervalSince1970
+                } label: {
+                    HStack {
+                        Spacer()
+                        Label("Reset Traffic Statistics", systemImage: "arrow.counterclockwise")
+                            .fontWeight(.semibold)
+                        Spacer()
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.red)
+            }
+            
             Section("Menu Bar") {
                 Picker("Display Mode", selection: $displayMode) {
                     Text("Both").tag(DisplayMode.both)
@@ -187,12 +204,21 @@ struct SettingsView: View {
                         }
                         .onDrop(of: [.text], delegate: DropRelocateDelegate(item: item, listData: $orderManager.sectionOrder, current: $draggingItem, changedView: $changedView))
                     }
-                    
-                    Button("Reset Order") {
+                }
+                
+                Section {
+                    Button(role: .destructive) {
                         orderManager.reset()
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Label("Reset Section Order", systemImage: "arrow.up.arrow.down")
+                                .fontWeight(.semibold)
+                            Spacer()
+                        }
                     }
-                    .font(.caption)
-                    .foregroundStyle(.red)
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
                 }
                 
 

@@ -55,7 +55,7 @@ struct DetailedStatusView: View {
         .frame(height: min(contentHeight, 600))
         .background(Color(NSColor.windowBackgroundColor))
         .onReceive(timer) { input in
-             let diff = input.timeIntervalSince(menuBarState.appLaunchDate)
+             let diff = input.timeIntervalSince(Date(timeIntervalSince1970: menuBarState.appLaunchDate))
              let hours = Int(diff) / 3600
              let minutes = (Int(diff) % 3600) / 60
              let seconds = Int(diff) % 60

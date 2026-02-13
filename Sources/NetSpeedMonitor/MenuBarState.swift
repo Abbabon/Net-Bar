@@ -6,11 +6,14 @@ import NetTrafficStat
 
 class MenuBarState: ObservableObject {
     // LaunchAtLogin handles the storage and state automatically
-    // We can expose a binding or just use LaunchAtLogin.isEnabled directly in the view
+    // We can expose a binding or just use LaunchAtLogin directly in the view
     // But keeping a published property to sync might be useful if we want to observe changes,
     // though LaunchAtLogin.observable seems better. For now let's just leave it out of here
     // and use LaunchAtLogin directly in the view, OR wrapper it.
     // Let's wrapping it for simplicity in the View code we have.
+    
+    // Explicit UserDefaults for reliable persistence in a non-View class
+    private let defaults = UserDefaults.standard
     
     var autoLaunchEnabled: Bool {
         get { LaunchAtLogin.isEnabled }
@@ -33,6 +36,17 @@ class MenuBarState: ObservableObject {
     
     @Published var menuText = ""
     
+    // Use @Published with manual UserDefaults sync for these critical values
+    @Published var totalUpload: Double = 0.0 {
+        didSet { defaults.set(totalUpload, forKey: "totalUploadPersistent") }
+    }
+    @Published var totalDownload: Double = 0.0 {
+        didSet { defaults.set(totalDownload, forKey: "totalDownloadPersistent") }
+    }
+    @Published var appLaunchDate: Double = 0.0 {
+        didSet { defaults.set(appLaunchDate, forKey: "appLaunchDate") }
+    }
+    
     var currentIcon: NSImage {
         return MenuBarIconGenerator.generateIcon(
             text: menuText,
@@ -51,12 +65,6 @@ class MenuBarState: ObservableObject {
     private var netTrafficStat = NetTrafficStatReceiver()
     private var systemStatsService = SystemStatsService.shared
     
-    // Session tracking
-    @Published var totalUpload: Double = 0.0
-    @Published var totalDownload: Double = 0.0
-    @Published var appLaunchDate = Date()
-    
-    // Speed History for Graphs
     @Published var downloadHistory: [Double] = []
     @Published var uploadHistory: [Double] = []
     @Published var totalTrafficHistory: [Double] = []
@@ -193,6 +201,16 @@ class MenuBarState: ObservableObject {
     }
     
     init() {
+        // Load initial values from UserDefaults
+        self.totalUpload = defaults.double(forKey: "totalUploadPersistent")
+        self.totalDownload = defaults.double(forKey: "totalDownloadPersistent")
+        self.appLaunchDate = defaults.double(forKey: "appLaunchDate")
+        
+        // Only set appLaunchDate if it's the very first time (0.0)
+        if self.appLaunchDate == 0.0 {
+            self.appLaunchDate = Date().timeIntervalSince1970
+        }
+        
         DispatchQueue.main.async {
             // Ensure valid display mode default
             if self.menuText.isEmpty { self.menuText = "..." }
