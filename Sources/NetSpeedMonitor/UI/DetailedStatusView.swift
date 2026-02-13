@@ -219,7 +219,7 @@ struct StatusContentView: View {
                         HStack {
                             ProgressView()
                                 .controlSize(.small)
-                            Text("Testing Speed...")
+                            Text("Testing Speed... (\(speedTestService.timeRemaining)s)")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
