@@ -12,7 +12,6 @@ struct DetailedStatusView: View {
     @State private var contentHeight: CGFloat = 600 // Default start height
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
-      @AppStorage("showTrafficHeader") private var showTrafficHeader = true
     @AppStorage("showTraffic") private var showTraffic = true
     @AppStorage("showConnection") private var showConnection = true
     @AppStorage("showRouter") private var showRouter = true
@@ -32,7 +31,6 @@ struct DetailedStatusView: View {
                 statsService: statsService,
                 systemStatsService: systemStatsService,
                 menuBarState: menuBarState,
-                showTrafficHeader: showTrafficHeader,
                 visibleSections: visibleSections,
                 tips: tips,
                 showTips: showTips,
@@ -117,7 +115,6 @@ struct StatusContentView: View {
     @ObservedObject var systemStatsService: SystemStatsService
     @ObservedObject var menuBarState: MenuBarState
     
-    let showTrafficHeader: Bool
     let visibleSections: [String]
     let tips: [String]
     let showTips: Bool
@@ -125,11 +122,10 @@ struct StatusContentView: View {
     let onSettingsTap: () -> Void
     let onQuitTap: () -> Void
     
-    init(statsService: NetworkStatsService, systemStatsService: SystemStatsService, menuBarState: MenuBarState, showTrafficHeader: Bool, visibleSections: [String], tips: [String], showTips: Bool, isSnapshot: Bool = false, onSettingsTap: @escaping () -> Void, onQuitTap: @escaping () -> Void) {
+    init(statsService: NetworkStatsService, systemStatsService: SystemStatsService, menuBarState: MenuBarState, visibleSections: [String], tips: [String], showTips: Bool, isSnapshot: Bool = false, onSettingsTap: @escaping () -> Void, onQuitTap: @escaping () -> Void) {
         self.statsService = statsService
         self.systemStatsService = systemStatsService
         self.menuBarState = menuBarState
-        self.showTrafficHeader = showTrafficHeader
         self.visibleSections = visibleSections
         self.tips = tips
         self.showTips = showTips
@@ -271,7 +267,6 @@ struct StatusContentView: View {
                 statsService: statsService,
                 systemStatsService: systemStatsService,
                 menuBarState: menuBarState,
-                showTrafficHeader: true,
                 visibleSections: ["Traffic", "Connection", "Router", "DNS", "Internet"],
                 tips: [],
                 showTips: false,
@@ -293,10 +288,8 @@ struct StatusContentView: View {
         switch section {
         case "Traffic":
             VStack(alignment: .leading, spacing: 12) {
-                 if showTrafficHeader {
-                     Text("Traffic")
-                         .font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
-                 }
+                 Text("Traffic")
+                     .font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
                  Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
                      GridRow(alignment: .center) {
                          Text("Download").foregroundStyle(.secondary)
@@ -345,18 +338,13 @@ struct StatusContentView: View {
                 Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
                     GridRow(alignment: .center) {
                         Text("Ping").foregroundStyle(.secondary)
-                        Text(String(format: "%.0f ms", statsService.stats.routerPing)).foregroundStyle(.green).monospacedDigit()
+                        Text(statsService.stats.routerLoss == 100 ? "---" : String(format: "%.0f ms", statsService.stats.routerPing)).foregroundStyle(.green).monospacedDigit()
                         StatGraphView(data: statsService.routerPingHistory, color: .green, minRange: 0, maxRange: 100, height: 16)
                     }
                     GridRow(alignment: .center) {
                         Text("Jitter").foregroundStyle(.secondary)
                         Text(String(format: "%.1f ms", statsService.stats.routerJitter)).foregroundStyle(.yellow).monospacedDigit()
                          StatGraphView(data: statsService.routerPingHistory.map { abs($0 - statsService.stats.routerPing) }, color: .yellow, minRange: 0, maxRange: 50, height: 16)
-                    }
-                    GridRow(alignment: .center) {
-                        Text("Loss").foregroundStyle(.secondary)
-                        Text(String(format: "%.0f%%", statsService.stats.routerLoss)).foregroundStyle(.yellow).monospacedDigit()
-                        Rectangle().fill(Color.orange).frame(height: 2)
                     }
                 }
             }
@@ -366,10 +354,15 @@ struct StatusContentView: View {
                 Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
                      GridRow(alignment: .center) {
                          Text(statsService.stats.dns.isEmpty ? "Unknown" : statsService.stats.dns).foregroundStyle(.secondary)
-                         Text(String(format: "%.0f ms", statsService.stats.dnsPing)).foregroundStyle(.cyan).monospacedDigit()
+                         Text(statsService.stats.dnsLoss == 100 ? "---" : String(format: "%.0f ms", statsService.stats.dnsPing)).foregroundStyle(.cyan).monospacedDigit()
                          StatGraphView(data: statsService.dnsPingHistory, color: .cyan, minRange: 0, maxRange: 100, height: 16)
                      }
-                }
+                      GridRow(alignment: .center) {
+                          Text("Jitter").foregroundStyle(.secondary)
+                          Text(String(format: "%.1f ms", statsService.stats.dnsJitter)).foregroundStyle(.purple).monospacedDigit()
+                          StatGraphView(data: statsService.dnsPingHistory.map { abs($0 - statsService.stats.dnsPing) }, color: .purple, minRange: 0, maxRange: 50, height: 16)
+                      }
+                 }
             }
         case "Internet":
             VStack(alignment: .leading, spacing: 12) {
@@ -377,7 +370,7 @@ struct StatusContentView: View {
                  Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
                     GridRow(alignment: .center) {
                         Text("Ping").foregroundStyle(.secondary)
-                        Text(String(format: "%.0f ms", statsService.stats.ping)).foregroundStyle(.yellow).monospacedDigit()
+                        Text(statsService.stats.loss == 100 ? "---" : String(format: "%.0f ms", statsService.stats.ping)).foregroundStyle(.yellow).monospacedDigit()
                         StatGraphView(data: statsService.pingHistory, color: .yellow, minRange: 0, maxRange: 200, height: 16)
                     }
                     GridRow(alignment: .center) {

@@ -174,37 +174,106 @@ class NetworkStatsService: NSObject, ObservableObject, CLLocationManagerDelegate
         output = sumDiff / Double(buffer.count - 1)
     }
     
-    // Helper to ping via shell
+    // Helper to ping via shell with TCP fallback
     private func pingHost(_ host: String, completion: @escaping (Double, Double) -> Void) {
+        let cleanedHost = host.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanedHost.isEmpty else {
+            completion(0.0, 100.0)
+            return
+        }
+
         DispatchQueue.global(qos: .background).async {
+            // 1. Try ICMP Ping first (send 5 packets for better loss calculation)
+            let isIPv6 = cleanedHost.contains(":")
             let task = Process()
-            task.launchPath = "/sbin/ping"
-            task.arguments = ["-c", "1", "-W", "500", host] // 1 count, 500ms timeout
+            task.executableURL = URL(fileURLWithPath: isIPv6 ? "/sbin/ping6" : "/sbin/ping")
+            task.arguments = ["-c", "5", "-W", "1000", cleanedHost]
             
             let pipe = Pipe()
             task.standardOutput = pipe
+            task.standardError = pipe
             
             do {
                 try task.run()
                 task.waitUntilExit()
                 
-                if task.terminationStatus == 0 {
-                    let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                    if let output = String(data: data, encoding: .utf8) {
-                        // Extract time=X.X ms
-                        if let range = output.range(of: "time=") {
-                            let substring = output[range.upperBound...]
-                            let components = substring.components(separatedBy: " ")
-                            if let timeStr = components.first, let timeMs = Double(timeStr) {
-                                completion(timeMs, 0.0) // 0% loss
-                                return
-                            }
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                if let output = String(data: data, encoding: .utf8) {
+                    // Parse loss percentage
+                    var lossValue = 100.0
+                    // Match "X.X% packet loss" or "X% packet loss"
+                    if let lossRange = output.range(of: "\\d+(\\.\\d+)?%\\s+packet\\s+loss", options: [.regularExpression, .caseInsensitive]) {
+                        let match = output[lossRange]
+                        let lossStr = match.components(separatedBy: "%").first ?? "100"
+                        lossValue = Double(lossStr.trimmingCharacters(in: .whitespaces)) ?? 100.0
+                    }
+
+                    // Parse average latency
+                    // Format: round-trip min/avg/max/stddev = 1.2/3.4/5.6/0.7 ms
+                    if let statsRange = output.range(of: "=\\s*[0-9.]+/([0-9.]+)/[0-9.]+/([0-9.]+)", options: .regularExpression) {
+                        let statsLine = output[statsRange]
+                        let values = statsLine.replacingOccurrences(of: "=", with: "")
+                            .trimmingCharacters(in: .whitespaces)
+                            .components(separatedBy: "/")
+                        
+                        if values.count >= 2, let avgMs = Double(values[1]) {
+                            completion(avgMs, lossValue)
+                            return
                         }
                     }
+                    
+                    // Fallback to single packet time if avg parsing failed but we have some output
+                    if lossValue < 100.0, let timeRange = output.range(of: "time[=:]\\s*([0-9.]+)", options: .regularExpression) {
+                        let match = output[timeRange]
+                        let timeStr = match.components(separatedBy: CharacterSet(charactersIn: "=: ")).last ?? ""
+                        if let timeMs = Double(timeStr) {
+                            completion(timeMs, lossValue)
+                            return
+                        }
+                    }
+                    
+                    // If 100% loss, try TCP fallback
+                    if lossValue == 100.0 {
+                        // Continue to TCP fallback
+                    } else {
+                        completion(0.0, lossValue)
+                        return
+                    }
                 }
-                // Failed or timeout
-                completion(0.0, 100.0) // 100% loss assumption for single packet fail
-            } catch {
+            } catch {}
+
+            // 2. Fallback: use 'nc' via Process (Safer than manual socket code in Swift)
+            // We'll try 5 times to simulate a loss percentage for TCP as well
+            var successfulChecks = 0
+            var totalLatency = 0.0
+            let attempts = 5
+            
+            for _ in 0..<attempts {
+                let ncTask = Process()
+                ncTask.executableURL = URL(fileURLWithPath: "/usr/bin/nc")
+                let targetPort = (cleanedHost == "1.1.1.1" || cleanedHost == "8.8.8.8") ? "53" : "80"
+                ncTask.arguments = ["-zv", "-G", "1", cleanedHost, targetPort]
+                
+                let start = DispatchTime.now()
+                do {
+                    try ncTask.run()
+                    ncTask.waitUntilExit()
+                    if ncTask.terminationStatus == 0 {
+                        let end = DispatchTime.now()
+                        let nanoTime = end.uptimeNanoseconds - start.uptimeNanoseconds
+                        totalLatency += Double(nanoTime) / 1_000_000
+                        successfulChecks += 1
+                    }
+                } catch {}
+                
+                if attempts > 1 { Thread.sleep(forTimeInterval: 0.1) }
+            }
+
+            if successfulChecks > 0 {
+                let avgLatency = totalLatency / Double(successfulChecks)
+                let loss = Double(attempts - successfulChecks) / Double(attempts) * 100.0
+                completion(avgLatency, loss)
+            } else {
                 completion(0.0, 100.0)
             }
         }
@@ -212,8 +281,8 @@ class NetworkStatsService: NSObject, ObservableObject, CLLocationManagerDelegate
     
     private func getGatewayIP(completion: @escaping (String?) -> Void) {
         DispatchQueue.global(qos: .background).async {
-             let task = Process()
-            task.launchPath = "/sbin/route"
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/sbin/route")
             task.arguments = ["-n", "get", "default"]
             
             let pipe = Pipe()
@@ -230,8 +299,11 @@ class NetworkStatsService: NSObject, ObservableObject, CLLocationManagerDelegate
                         if line.contains("gateway:") {
                             let components = line.components(separatedBy: ":")
                             if components.count > 1 {
-                                completion(components[1].trimmingCharacters(in: .whitespaces))
-                                return
+                                let gateway = components[1].trimmingCharacters(in: .whitespacesAndNewlines)
+                                if !gateway.isEmpty {
+                                    completion(gateway)
+                                    return
+                                }
                             }
                         }
                     }
@@ -246,7 +318,7 @@ class NetworkStatsService: NSObject, ObservableObject, CLLocationManagerDelegate
     private func getDNSServer(completion: @escaping (String?) -> Void) {
          DispatchQueue.global(qos: .background).async {
              let task = Process()
-             task.launchPath = "/usr/sbin/scutil"
+             task.executableURL = URL(fileURLWithPath: "/usr/sbin/scutil")
              task.arguments = ["--dns"]
              
              let pipe = Pipe()
@@ -258,15 +330,17 @@ class NetworkStatsService: NSObject, ObservableObject, CLLocationManagerDelegate
                  
                  let data = pipe.fileHandleForReading.readDataToEndOfFile()
                  if let output = String(data: data, encoding: .utf8) {
-                     // Look for "nameserver[0] : 1.2.3.4" inside "resolver #1" block usually
-                     // Simple parsing: find first "nameserver["
                      let lines = output.components(separatedBy: "\n")
                      for line in lines {
-                         if line.trimmingCharacters(in: .whitespaces).hasPrefix("nameserver[0]") {
+                         let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                         if trimmed.hasPrefix("nameserver[0]") {
                              let components = line.components(separatedBy: ":")
                              if components.count > 1 {
-                                 completion(components[1].trimmingCharacters(in: .whitespaces))
-                                 return
+                                 let dns = components[1].trimmingCharacters(in: .whitespacesAndNewlines)
+                                 if !dns.isEmpty {
+                                     completion(dns)
+                                     return
+                                 }
                              }
                          }
                      }
