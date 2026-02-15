@@ -106,7 +106,7 @@ To compile the application manually:
 
 ## Inspiration
 
-The **More Info** page design draws inspiration from [Whyfi](https://whyfi.network/).
+The **UI** design draws inspiration from [Whyfi](https://whyfi.network/).
 
 ## Support
 
