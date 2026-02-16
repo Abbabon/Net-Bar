@@ -1,6 +1,5 @@
 import Foundation
 import CoreWLAN
-import CoreLocation
 import Combine
 
 struct NetworkStats {
@@ -23,7 +22,7 @@ struct NetworkStats {
     var dnsLoss: Double = 0.0
 }
 
-class NetworkStatsService: NSObject, ObservableObject, CLLocationManagerDelegate {
+class NetworkStatsService: NSObject, ObservableObject {
     @Published var stats = NetworkStats()
     @Published var signalHistory: [Int] = []
     @Published var noiseHistory: [Int] = []
@@ -35,8 +34,6 @@ class NetworkStatsService: NSObject, ObservableObject, CLLocationManagerDelegate
     
     private var timer: Timer?
     private let wifiClient = CWWiFiClient.shared()
-    private let locationManager = CLLocationManager()
-    
     // Ping variables
     private var pingBuffer: [Double] = []
     private var routerPingBuffer: [Double] = []
@@ -46,20 +43,11 @@ class NetworkStatsService: NSObject, ObservableObject, CLLocationManagerDelegate
     
     override init() {
         super.init()
-        locationManager.delegate = self
-        locationManager.requestAlwaysAuthorization() // Try always or when in use
-        locationManager.startUpdatingLocation()
         startMonitoring()
     }
 
-    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-         if status == .authorizedAlways {
-             updateWifiStats()
-         }
-    }
-    
     func startMonitoring() {
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
             self?.updateWifiStats()
             self?.performPing()
         }
