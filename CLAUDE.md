@@ -6,6 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Net Bar is a macOS menu bar application for real-time system and network monitoring. Built with Swift/SwiftUI + Objective-C++ (for low-level network stats). Requires macOS 14.0 (Sonoma) or later.
 
+## Branching
+
+- **`develop`** — default branch; local working branch for all development
+- **`main`** — tracks upstream (iad1tya/Net-Bar); PRs to upstream are proposed from feature branches off main
+
 ## Build & Run
 
 ```bash
