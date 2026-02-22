@@ -35,6 +35,7 @@
 
 - **Real-time Monitoring**: View current download and upload speeds directly in the menu bar.
 - **Pin to Menu Bar**: Pin any stat to the menu bar — network speed, signal strength, ping latency, CPU, memory, disk, temperature, or battery. Multiple pinned stats display side-by-side (e.g. `↑ 1.2 MB/s ↓ 5.7 MB/s | CPU: 25% | RAM: 60%`). Network speed is pinned by default.
+- **Connection Status Indicator**: Menu bar text turns red when internet connectivity is lost, giving you an instant visual cue.
 - **Comprehensive System Stats**: Monitors more than just network:
   - **Memory Usage**: Track actual RAM usage and pressure.
   - **Processor Usage**: Track CPU usage.
