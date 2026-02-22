@@ -34,7 +34,8 @@
 ## Features
 
 - **Real-time Monitoring**: View current download and upload speeds directly in the menu bar.
-- **Comprehensive System Stats**: Now monitors more than just network:
+- **Pin to Menu Bar**: Pin any stat to the menu bar — network speed, signal strength, ping latency, CPU, memory, disk, temperature, or battery. Multiple pinned stats display side-by-side (e.g. `↑ 1.2 MB/s ↓ 5.7 MB/s | CPU: 25% | RAM: 60%`). Network speed is pinned by default.
+- **Comprehensive System Stats**: Monitors more than just network:
   - **Memory Usage**: Track actual RAM usage and pressure.
   - **Processor Usage**: Track CPU usage.
   - **Storage**: Monitor disk space (Used vs Free).
@@ -46,6 +47,7 @@
   - **Dynamic Filtering**: Disable sections you don't need (like "Disk" or "Battery"), and they vanish from the interface and reorder list entirely.
   - **Typography**: Fine-tune font size, line spacing, and kerning.
 - **Smart Tips**: The app now gives you helpful tips based on your specific hardware status (e.g., "High Memory Usage" or "Weak Signal"), but only for enabled sections.
+- **Privacy-First**: No location permissions required. All monitoring is performed locally with no data collection.
 - **Native Experience**: Built with SwiftUI and AppKit for a seamless, lightweight, and crash-free macOS experience.
 
 
@@ -87,17 +89,7 @@ To compile the application manually:
     Run the following script to build and install the application to the Applications folder:
 
     ```bash
-    swift build -c release && \
-    rm -rf "Net Bar.app" && \
-    BIN_PATH=$(swift build -c release --show-bin-path) && \
-    mkdir -p "Net Bar.app/Contents/MacOS" && \
-    mkdir -p "Net Bar.app/Contents/Resources" && \
-    cp "$BIN_PATH/NetBar" "Net Bar.app/Contents/MacOS/NetBar" && \
-    cp Sources/NetSpeedMonitor/Info.plist "Net Bar.app/Contents/Info.plist" && \
-    cp Sources/NetSpeedMonitor/Resources/AppIcon.icns "Net Bar.app/Contents/Resources/AppIcon.icns" && \
-    cp -r Sources/NetSpeedMonitor/Assets.xcassets "Net Bar.app/Contents/Resources/" && \
-    rm -rf "/Applications/Net Bar.app" && \
-    mv "Net Bar.app" /Applications/
+    bash build_and_install.sh
     ```
 
 ## Requirements
