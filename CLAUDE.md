@@ -11,6 +11,8 @@ Net Bar is a macOS menu bar application for real-time system and network monitor
 - **`develop`** — default branch; local working branch for all development
 - **`main`** — tracks upstream (iad1tya/Net-Bar); PRs to upstream are proposed from feature branches off main
 
+See [DEVELOPMENT.md](DEVELOPMENT.md) for branching workflow, commit conventions, and PR guidelines.
+
 ## Build & Run
 
 ```bash
@@ -33,8 +35,8 @@ There are no tests in this project.
 
 ### State & Services Layer
 
-- **MenuBarState** — central observable state for network speeds, display settings, traffic history, and pin-to-menu-bar toggles. Polls `NetTrafficStatReceiver` (C++/ObjC bridge) every 1 second. Assembles the menu bar text from all pinned stats (speed, RSSI, ping, CPU, RAM, etc.) joined by `" | "`.
-- **NetworkStatsService** — singleton (`shared`). Wi-Fi details (CoreWLAN), ping tests to DNS/router/1.1.1.1 with ICMP→TCP fallback, jitter calculation. Polls every 3 seconds. No location permissions required.
+- **MenuBarState** — central observable state for network speeds, display settings, traffic history, pin-to-menu-bar toggles, and connectivity status. Polls `NetTrafficStatReceiver` (C++/ObjC bridge) every 1 second. Assembles the menu bar text from all pinned stats (speed, RSSI, ping, CPU, RAM, etc.) joined by `" | "`. Uses `SCNetworkReachability` to detect internet connectivity and turns the menu bar text red when offline.
+- **NetworkStatsService** — singleton (`shared`). Wi-Fi details (CoreWLAN), ping tests to DNS/router/1.1.1.1 with ICMP->TCP fallback, jitter calculation. Polls every 3 seconds. No location permissions required.
 - **SystemStatsService** — CPU, memory, disk, battery, thermal monitoring via `host_cpu_load_info`, `vm_statistics64`, IOKit.
 - **SpeedTestService** — wraps the system `networkQuality` CLI tool with async execution and output parsing.
 - **OrderManager** — persists drag-and-drop section order via UserDefaults (JSON).
@@ -46,7 +48,7 @@ There are no tests in this project.
 - **SettingsView** — configuration: section visibility/order, typography, display mode, units, pin-to-menu-bar toggles, updates.
 - **MenuContentView** — context menu (launch at login, open Activity Monitor, quit).
 - **StatGraphView** — reusable Charts-based area graph (60-second history buffer).
-- **MenuBarIconGenerator** — renders dynamic text icon for the menu bar.
+- **MenuBarIconGenerator** — renders dynamic text icon for the menu bar. Supports colored (red) rendering when disconnected via `isTemplate` toggle.
 
 ### Pin-to-Menu-Bar System
 
