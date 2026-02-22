@@ -126,6 +126,7 @@ struct StatusContentView: View {
     @AppStorage("showDiskMenu") private var showDiskMenu: Bool = false
     @AppStorage("showBatteryMenu") private var showBatteryMenu: Bool = false
     @AppStorage("showTempMenu") private var showTempMenu: Bool = false
+    @AppStorage("showSpeedMenu") private var showSpeedMenu: Bool = true
 
     let visibleSections: [String]
     let tips: [String]
@@ -402,8 +403,7 @@ struct StatusContentView: View {
         switch section {
         case "Traffic":
             VStack(alignment: .leading, spacing: 12) {
-                 Text("Traffic")
-                     .font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
+                 sectionHeader("Traffic", pinBinding: $showSpeedMenu)
                  Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
                      GridRow(alignment: .center) {
                          Text("Download").foregroundStyle(.secondary)

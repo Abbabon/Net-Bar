@@ -29,6 +29,8 @@ class MenuBarState: ObservableObject {
     @AppStorage("characterSpacing") var characterSpacing: Double = 0.0
     @AppStorage("unstackNetworkUsage") var unstackNetworkUsage: Bool = false
     
+    @AppStorage("showSpeedMenu") var showSpeedMenu: Bool = true
+
     @AppStorage("showCPUMenu") var showCPUMenu: Bool = false
     @AppStorage("showMemoryMenu") var showMemoryMenu: Bool = false
     @AppStorage("showDiskMenu") var showDiskMenu: Bool = false
@@ -159,20 +161,20 @@ class MenuBarState: ObservableObject {
                         let (downVal, downUnit) = self.formatSpeed(self.downloadSpeed)
                         let (upVal, upUnit) = self.formatSpeed(self.uploadSpeed)
                         
-                        var networkSegments: [String] = []
-                        
-                        if self.displayMode == .both || self.displayMode == .uploadOnly {
-                            networkSegments.append("\(self.showArrows ? "↑ " : "")\(upVal) \(upUnit)")
-                        }
-                        
-                        if self.displayMode == .both || self.displayMode == .downloadOnly {
-                            networkSegments.append("\(self.showArrows ? "↓ " : "")\(downVal) \(downUnit)")
-                        }
-                        
-                        var text = networkSegments.joined(separator: self.unstackNetworkUsage ? " | " : "\n")
-                        
                         // Pinned Stats
                         var statsList: [String] = []
+
+                        // Network Speed (pinnable, default on)
+                        if self.showSpeedMenu {
+                            var speedParts: [String] = []
+                            if self.displayMode == .both || self.displayMode == .uploadOnly {
+                                speedParts.append("\(self.showArrows ? "↑ " : "")\(upVal) \(upUnit)")
+                            }
+                            if self.displayMode == .both || self.displayMode == .downloadOnly {
+                                speedParts.append("\(self.showArrows ? "↓ " : "")\(downVal) \(downUnit)")
+                            }
+                            statsList.append(speedParts.joined(separator: self.unstackNetworkUsage ? " " : "\n"))
+                        }
 
                         // Network stats
                         let netStats = self.networkStatsService.stats
@@ -205,15 +207,23 @@ class MenuBarState: ObservableObject {
                         if self.showBatteryMenu {
                             statsList.append("BAT: \(Int(self.systemStatsService.stats.batteryLevel))%")
                         }
-                        
-                        let systemStatsText = statsList.joined(separator: " | ")
-                        
-                        if !systemStatsText.isEmpty {
-                            text = text.trimmingCharacters(in: .whitespacesAndNewlines) + " | " + systemStatsText
+
+                        let text: String
+                        if !statsList.isEmpty {
+                            // Pinned stats replace the default speed display
+                            text = statsList.joined(separator: " | ")
                         } else {
-                            text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                            // Default: show network speed
+                            var networkSegments: [String] = []
+                            if self.displayMode == .both || self.displayMode == .uploadOnly {
+                                networkSegments.append("\(self.showArrows ? "↑ " : "")\(upVal) \(upUnit)")
+                            }
+                            if self.displayMode == .both || self.displayMode == .downloadOnly {
+                                networkSegments.append("\(self.showArrows ? "↓ " : "")\(downVal) \(downUnit)")
+                            }
+                            text = networkSegments.joined(separator: self.unstackNetworkUsage ? " | " : "\n")
                         }
-                        
+
                         self.menuText = text
                     }
                 }

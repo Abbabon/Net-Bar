@@ -30,6 +30,7 @@ struct SettingsView: View {
 
 
     // Pin-to-menu-bar toggles (network)
+    @AppStorage("showSpeedMenu") private var showSpeedMenu: Bool = true
     @AppStorage("showRSSIMenu") private var showRSSIMenu: Bool = false
     @AppStorage("showRouterPingMenu") private var showRouterPingMenu: Bool = false
     @AppStorage("showDNSPingMenu") private var showDNSPingMenu: Bool = false
@@ -177,6 +178,7 @@ struct SettingsView: View {
 
                 
                 Text("Pin to Menu Bar — Network").font(.caption).foregroundStyle(.secondary)
+                Toggle("Network Speed", isOn: $showSpeedMenu)
                 Toggle("Signal Strength (RSSI)", isOn: $showRSSIMenu)
                 Toggle("Internet Ping", isOn: $showInternetPingMenu)
                 Toggle("Router Ping", isOn: $showRouterPingMenu)
