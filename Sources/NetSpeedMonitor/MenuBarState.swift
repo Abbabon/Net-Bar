@@ -33,6 +33,12 @@ class MenuBarState: ObservableObject {
     @AppStorage("showMemoryMenu") var showMemoryMenu: Bool = false
     @AppStorage("showDiskMenu") var showDiskMenu: Bool = false
     @AppStorage("showTempMenu") var showTempMenu: Bool = false
+
+    @AppStorage("showRSSIMenu") var showRSSIMenu: Bool = false
+    @AppStorage("showRouterPingMenu") var showRouterPingMenu: Bool = false
+    @AppStorage("showDNSPingMenu") var showDNSPingMenu: Bool = false
+    @AppStorage("showInternetPingMenu") var showInternetPingMenu: Bool = false
+    @AppStorage("showBatteryMenu") var showBatteryMenu: Bool = false
     
     @Published var menuText = ""
     
@@ -64,6 +70,7 @@ class MenuBarState: ObservableObject {
     private var primaryInterface: String?
     private var netTrafficStat = NetTrafficStatReceiver()
     private var systemStatsService = SystemStatsService.shared
+    private var networkStatsService = NetworkStatsService.shared
     
     @Published var downloadHistory: [Double] = []
     @Published var uploadHistory: [Double] = []
@@ -164,8 +171,25 @@ class MenuBarState: ObservableObject {
                         
                         var text = networkSegments.joined(separator: self.unstackNetworkUsage ? " | " : "\n")
                         
-                        // System Stats
+                        // Pinned Stats
                         var statsList: [String] = []
+
+                        // Network stats
+                        let netStats = self.networkStatsService.stats
+                        if self.showRSSIMenu {
+                            statsList.append("RSSI: \(netStats.rssi)")
+                        }
+                        if self.showRouterPingMenu {
+                            statsList.append("RTR: \(netStats.routerLoss == 100 ? "---" : String(format: "%.0fms", netStats.routerPing))")
+                        }
+                        if self.showDNSPingMenu {
+                            statsList.append("DNS: \(netStats.dnsLoss == 100 ? "---" : String(format: "%.0fms", netStats.dnsPing))")
+                        }
+                        if self.showInternetPingMenu {
+                            statsList.append("Ping: \(netStats.loss == 100 ? "---" : String(format: "%.0fms", netStats.ping))")
+                        }
+
+                        // System stats
                         if self.showCPUMenu {
                             statsList.append("CPU: \(Int(self.systemStatsService.stats.cpuUsage))%")
                         }
@@ -177,6 +201,9 @@ class MenuBarState: ObservableObject {
                         }
                         if self.showTempMenu {
                             statsList.append("\(Int(self.systemStatsService.stats.cpuTemperature))°C")
+                        }
+                        if self.showBatteryMenu {
+                            statsList.append("BAT: \(Int(self.systemStatsService.stats.batteryLevel))%")
                         }
                         
                         let systemStatsText = statsList.joined(separator: " | ")
