@@ -23,25 +23,27 @@ struct NetworkStats {
 }
 
 class NetworkStatsService: NSObject, ObservableObject {
+    static let shared = NetworkStatsService()
+
     @Published var stats = NetworkStats()
     @Published var signalHistory: [Int] = []
     @Published var noiseHistory: [Int] = []
     @Published var pingHistory: [Double] = []
     @Published var routerPingHistory: [Double] = []
-    
+
     // Limits
     private let historyLimit = 60
-    
+
     private var timer: Timer?
     private let wifiClient = CWWiFiClient.shared()
     // Ping variables
     private var pingBuffer: [Double] = []
     private var routerPingBuffer: [Double] = []
-    
+
     @Published var dnsPingHistory: [Double] = []
     private var dnsPingBuffer: [Double] = []
-    
-    override init() {
+
+    private override init() {
         super.init()
         startMonitoring()
     }
