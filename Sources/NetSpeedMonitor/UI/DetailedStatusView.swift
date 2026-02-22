@@ -2,7 +2,7 @@ import SwiftUI
 import Charts
 
 struct DetailedStatusView: View {
-    @StateObject private var statsService = NetworkStatsService()
+    @ObservedObject private var statsService = NetworkStatsService.shared
     @ObservedObject private var systemStatsService = SystemStatsService.shared
     @EnvironmentObject var menuBarState: MenuBarState
     @EnvironmentObject var orderManager: OrderManager
@@ -116,6 +116,17 @@ struct StatusContentView: View {
     @ObservedObject var menuBarState: MenuBarState
     @StateObject private var speedTestService = SpeedTestService.shared
     
+    // Pin-to-menu-bar toggles
+    @AppStorage("showRSSIMenu") private var showRSSIMenu: Bool = false
+    @AppStorage("showRouterPingMenu") private var showRouterPingMenu: Bool = false
+    @AppStorage("showDNSPingMenu") private var showDNSPingMenu: Bool = false
+    @AppStorage("showInternetPingMenu") private var showInternetPingMenu: Bool = false
+    @AppStorage("showCPUMenu") private var showCPUMenu: Bool = false
+    @AppStorage("showMemoryMenu") private var showMemoryMenu: Bool = false
+    @AppStorage("showDiskMenu") private var showDiskMenu: Bool = false
+    @AppStorage("showBatteryMenu") private var showBatteryMenu: Bool = false
+    @AppStorage("showTempMenu") private var showTempMenu: Bool = false
+
     let visibleSections: [String]
     let tips: [String]
     let showTips: Bool
@@ -368,6 +379,25 @@ struct StatusContentView: View {
     }
 
     @ViewBuilder
+    func sectionHeader(_ title: String, pinBinding: Binding<Bool>) -> some View {
+        HStack {
+            Text(title).font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
+            Spacer()
+            if !isSnapshot {
+                Button {
+                    pinBinding.wrappedValue.toggle()
+                } label: {
+                    Image(systemName: pinBinding.wrappedValue ? "pin.fill" : "pin")
+                        .font(.caption2)
+                        .foregroundStyle(pinBinding.wrappedValue ? .blue : .secondary)
+                }
+                .buttonStyle(.plain)
+                .help(pinBinding.wrappedValue ? "Unpin from menu bar" : "Pin to menu bar")
+            }
+        }
+    }
+
+    @ViewBuilder
     func sectionView(for section: String) -> some View {
         switch section {
         case "Traffic":
@@ -397,7 +427,7 @@ struct StatusContentView: View {
             }
         case "Connection":
             VStack(alignment: .leading, spacing: 12) {
-                Text("Connection").font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
+                sectionHeader("Connection", pinBinding: $showRSSIMenu)
                 Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
                     GridRow(alignment: .center) {
                         Text("Link Rate").foregroundStyle(.secondary)
@@ -418,7 +448,7 @@ struct StatusContentView: View {
             }
         case "Router":
             VStack(alignment: .leading, spacing: 12) {
-                Text("Router").font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
+                sectionHeader("Router", pinBinding: $showRouterPingMenu)
                 Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
                     GridRow(alignment: .center) {
                         Text("Ping").foregroundStyle(.secondary)
@@ -434,7 +464,7 @@ struct StatusContentView: View {
             }
         case "DNS":
             VStack(alignment: .leading, spacing: 12) {
-                Text("DNS Router Assigned").font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
+                sectionHeader("DNS Router Assigned", pinBinding: $showDNSPingMenu)
                 Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
                      GridRow(alignment: .center) {
                          Text(statsService.stats.dns.isEmpty ? "Unknown" : statsService.stats.dns).foregroundStyle(.secondary)
@@ -450,7 +480,7 @@ struct StatusContentView: View {
             }
         case "Internet":
             VStack(alignment: .leading, spacing: 12) {
-                Text("Internet - 1.1.1.1").font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
+                sectionHeader("Internet - 1.1.1.1", pinBinding: $showInternetPingMenu)
                  Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
                     GridRow(alignment: .center) {
                         Text("Ping").foregroundStyle(.secondary)
@@ -466,7 +496,7 @@ struct StatusContentView: View {
             }
         case "Processor":
              VStack(alignment: .leading, spacing: 12) {
-                 Text("Processor").font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
+                 sectionHeader("Processor", pinBinding: $showCPUMenu)
                  Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
                      GridRow(alignment: .center) {
                          Text("Usage").foregroundStyle(.secondary)
@@ -483,7 +513,7 @@ struct StatusContentView: View {
              }
         case "Memory":
             VStack(alignment: .leading, spacing: 12) {
-                Text("Memory").font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
+                sectionHeader("Memory", pinBinding: $showMemoryMenu)
                 Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
                     GridRow(alignment: .center) {
                         Text("Usage").foregroundStyle(.secondary)
@@ -499,7 +529,7 @@ struct StatusContentView: View {
             }
         case "Disk":
              VStack(alignment: .leading, spacing: 12) {
-                Text("Disk").font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
+                sectionHeader("Disk", pinBinding: $showDiskMenu)
                 Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
                     GridRow(alignment: .center) {
                         Text("Usage").foregroundStyle(.secondary)
@@ -516,7 +546,7 @@ struct StatusContentView: View {
             }
         case "Battery":
              VStack(alignment: .leading, spacing: 12) {
-                Text("Battery").font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
+                sectionHeader("Battery", pinBinding: $showBatteryMenu)
                  Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
                      GridRow(alignment: .center) {
                          Text("Level").foregroundStyle(.secondary)
@@ -537,7 +567,7 @@ struct StatusContentView: View {
             }
         case "Thermal State":
              VStack(alignment: .leading, spacing: 12) {
-                Text("Thermal State").font(.caption).fontWeight(.bold).foregroundStyle(.secondary)
+                sectionHeader("Thermal State", pinBinding: $showTempMenu)
                  Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
                      GridRow(alignment: .center) {
                          Text("State").foregroundStyle(.secondary)
