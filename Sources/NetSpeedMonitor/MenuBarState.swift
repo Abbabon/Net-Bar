@@ -43,6 +43,7 @@ class MenuBarState: ObservableObject {
     @AppStorage("showBatteryMenu") var showBatteryMenu: Bool = false
     
     @Published var menuText = ""
+    @Published var isConnected: Bool = true
     
     // Use @Published with manual UserDefaults sync for these critical values
     @Published var totalUpload: Double = 0.0 {
@@ -60,7 +61,8 @@ class MenuBarState: ObservableObject {
             text: menuText,
             font: .monospacedSystemFont(ofSize: fontSize, weight: .semibold),
             spacing: textSpacing,
-            kern: characterSpacing
+            kern: characterSpacing,
+            isConnected: isConnected
         )
     }
     
@@ -86,6 +88,25 @@ class MenuBarState: ObservableObject {
     private let byteMetrics: [String] = [" B", "KB", "MB", "GB", "TB"]
     private let bitMetrics: [String] = [" b", "Kb", "Mb", "Gb", "Tb"]
     
+    private func checkInternetReachability() -> Bool {
+        var zeroAddress = sockaddr_in()
+        zeroAddress.sin_len = UInt8(MemoryLayout.size(ofValue: zeroAddress))
+        zeroAddress.sin_family = sa_family_t(AF_INET)
+
+        guard let reachability = withUnsafePointer(to: &zeroAddress, {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                SCNetworkReachabilityCreateWithAddress(nil, $0)
+            }
+        }) else { return false }
+
+        var flags: SCNetworkReachabilityFlags = []
+        if !SCNetworkReachabilityGetFlags(reachability, &flags) { return false }
+
+        let isReachable = flags.contains(.reachable)
+        let needsConnection = flags.contains(.connectionRequired)
+        return isReachable && !needsConnection
+    }
+
     private func findPrimaryInterface() -> String? {
         let storeRef = SCDynamicStoreCreate(nil, "FindCurrentInterfaceIpMac" as CFString, nil, nil)
         let global = SCDynamicStoreCopyValue(storeRef, "State:/Network/Global/IPv4" as CFString)
@@ -141,6 +162,10 @@ class MenuBarState: ObservableObject {
     private func startTimer() {
         let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
                 guard let self = self else { return }
+                let osReachable = self.checkInternetReachability()
+                let netStats = self.networkStatsService.stats
+                let pingHealthy = netStats.loss < 100 && netStats.ping < 1000
+                self.isConnected = osReachable && pingHealthy
                 self.primaryInterface = self.findPrimaryInterface()
                 if (self.primaryInterface == nil) { return }
                 
@@ -177,7 +202,6 @@ class MenuBarState: ObservableObject {
                         }
 
                         // Network stats
-                        let netStats = self.networkStatsService.stats
                         if self.showRSSIMenu {
                             statsList.append("RSSI: \(netStats.rssi)")
                         }
