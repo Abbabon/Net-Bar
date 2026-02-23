@@ -1,10 +1,3 @@
-> [!TIP]
-> This application is free and under active development.  
-> Consider supporting via cryptocurrency or by buying me a coffee.  
-> Details are at the bottom of this README.
-
-
-
 <p align="center">
   <img src="assets/netbar.png" alt="Net Bar Icon" width="1280" height="640">
 </p>
@@ -70,7 +63,7 @@ xattr -rd com.apple.quarantine /Applications/NetBar.app
 
 ### DMG Installer (Recommended)
 
-1.  Download the latest `NetBar_Installer.dmg` from the [Releases](https://github.com/iad1tya/Net-Bar/releases) page.
+1.  Download the latest `NetBar_Installer.dmg` from the Releases page.
 2.  Open the mounted image.
 3.  Drag `Net Bar.app` into the `Applications` directory.
 4.  Run the Gatekeeper command mentioned above if necessary.
@@ -82,7 +75,7 @@ To compile the application manually:
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/iad1tya/Net-Bar
+    git clone <your-repo-url>
     cd Net-Bar
     ```
 
@@ -101,24 +94,3 @@ To compile the application manually:
 
 The **UI** design draws inspiration from [Whyfi](https://whyfi.network/).
 
-## Support
-
-If you find Net Bar useful, please consider supporting its development.
-
-<div align="center">
-
-<a href="https://www.buymeacoffee.com/iad1tya" target="_blank">
-  <img src="assets/bmac.png" alt="Buy Me A Coffee" height="50">
-</a>
-
-| Currency | Address |
-| :--- | :--- |
-| **Bitcoin (BTC)** | `bc1qcvyr7eekha8uytmffcvgzf4h7xy7shqzke35fy` |
-| **Ethereum (ETH)** | `0x51bc91022E2dCef9974D5db2A0e22d57B360e700` |
-| **Solana (SOL)** | `9wjca3EQnEiqzqgy7N5iqS1JGXJiknMQv6zHgL96t94S` |
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=iad1tya/net-bar&type=timeline&logscale&legend=top-left)](https://www.star-history.com/#iad1tya/net-bar&type=timeline&logscale&legend=top-left)
-
-</div>
