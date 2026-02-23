@@ -1,10 +1,3 @@
-> [!TIP]
-> This application is free and under active development.  
-> Consider supporting via cryptocurrency or by buying me a coffee.  
-> Details are at the bottom of this README.
-
-
-
 <p align="center">
   <img src="assets/netbar.png" alt="Net Bar Icon" width="1280" height="640">
 </p>
@@ -34,7 +27,9 @@
 ## Features
 
 - **Real-time Monitoring**: View current download and upload speeds directly in the menu bar.
-- **Comprehensive System Stats**: Now monitors more than just network:
+- **Pin to Menu Bar**: Pin any stat to the menu bar — network speed, signal strength, ping latency, CPU, memory, disk, temperature, or battery. Multiple pinned stats display side-by-side (e.g. `↑ 1.2 MB/s ↓ 5.7 MB/s | CPU: 25% | RAM: 60%`). Network speed is pinned by default.
+- **Connection Status Indicator**: Menu bar text turns red when internet connectivity is lost, giving you an instant visual cue.
+- **Comprehensive System Stats**: Monitors more than just network:
   - **Memory Usage**: Track actual RAM usage and pressure.
   - **Processor Usage**: Track CPU usage.
   - **Storage**: Monitor disk space (Used vs Free).
@@ -46,6 +41,7 @@
   - **Dynamic Filtering**: Disable sections you don't need (like "Disk" or "Battery"), and they vanish from the interface and reorder list entirely.
   - **Typography**: Fine-tune font size, line spacing, and kerning.
 - **Smart Tips**: The app now gives you helpful tips based on your specific hardware status (e.g., "High Memory Usage" or "Weak Signal"), but only for enabled sections.
+- **Privacy-First**: No location permissions required. All monitoring is performed locally with no data collection.
 - **Native Experience**: Built with SwiftUI and AppKit for a seamless, lightweight, and crash-free macOS experience.
 
 
@@ -67,7 +63,7 @@ xattr -rd com.apple.quarantine /Applications/NetBar.app
 
 ### DMG Installer (Recommended)
 
-1.  Download the latest `NetBar_Installer.dmg` from the [Releases](https://github.com/iad1tya/Net-Bar/releases) page.
+1.  Download the latest `NetBar_Installer.dmg` from the Releases page.
 2.  Open the mounted image.
 3.  Drag `Net Bar.app` into the `Applications` directory.
 4.  Run the Gatekeeper command mentioned above if necessary.
@@ -79,7 +75,7 @@ To compile the application manually:
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/iad1tya/Net-Bar
+    git clone <your-repo-url>
     cd Net-Bar
     ```
 
@@ -87,17 +83,7 @@ To compile the application manually:
     Run the following script to build and install the application to the Applications folder:
 
     ```bash
-    swift build -c release && \
-    rm -rf "Net Bar.app" && \
-    BIN_PATH=$(swift build -c release --show-bin-path) && \
-    mkdir -p "Net Bar.app/Contents/MacOS" && \
-    mkdir -p "Net Bar.app/Contents/Resources" && \
-    cp "$BIN_PATH/NetBar" "Net Bar.app/Contents/MacOS/NetBar" && \
-    cp Sources/NetSpeedMonitor/Info.plist "Net Bar.app/Contents/Info.plist" && \
-    cp Sources/NetSpeedMonitor/Resources/AppIcon.icns "Net Bar.app/Contents/Resources/AppIcon.icns" && \
-    cp -r Sources/NetSpeedMonitor/Assets.xcassets "Net Bar.app/Contents/Resources/" && \
-    rm -rf "/Applications/Net Bar.app" && \
-    mv "Net Bar.app" /Applications/
+    bash build_and_install.sh
     ```
 
 ## Requirements
@@ -108,24 +94,3 @@ To compile the application manually:
 
 The **UI** design draws inspiration from [Whyfi](https://whyfi.network/).
 
-## Support
-
-If you find Net Bar useful, please consider supporting its development.
-
-<div align="center">
-
-<a href="https://www.buymeacoffee.com/iad1tya" target="_blank">
-  <img src="assets/bmac.png" alt="Buy Me A Coffee" height="50">
-</a>
-
-| Currency | Address |
-| :--- | :--- |
-| **Bitcoin (BTC)** | `bc1qcvyr7eekha8uytmffcvgzf4h7xy7shqzke35fy` |
-| **Ethereum (ETH)** | `0x51bc91022E2dCef9974D5db2A0e22d57B360e700` |
-| **Solana (SOL)** | `9wjca3EQnEiqzqgy7N5iqS1JGXJiknMQv6zHgL96t94S` |
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=iad1tya/net-bar&type=timeline&logscale&legend=top-left)](https://www.star-history.com/#iad1tya/net-bar&type=timeline&logscale&legend=top-left)
-
-</div>

@@ -26,9 +26,17 @@ struct SettingsView: View {
     @AppStorage("showDisk") private var showDisk: Bool = false
     @AppStorage("showEnergy") private var showEnergy: Bool = false
     @AppStorage("showTemp") private var showTemp: Bool = false
+    @AppStorage("autoCheckForUpdates") private var autoCheckForUpdates: Bool = false
 
 
-    
+    // Pin-to-menu-bar toggles (network)
+    @AppStorage("showSpeedMenu") private var showSpeedMenu: Bool = true
+    @AppStorage("showRSSIMenu") private var showRSSIMenu: Bool = false
+    @AppStorage("showRouterPingMenu") private var showRouterPingMenu: Bool = false
+    @AppStorage("showDNSPingMenu") private var showDNSPingMenu: Bool = false
+    @AppStorage("showInternetPingMenu") private var showInternetPingMenu: Bool = false
+    @AppStorage("showBatteryMenu") private var showBatteryMenu: Bool = false
+
     @EnvironmentObject var menuBarState: MenuBarState
     @EnvironmentObject var orderManager: OrderManager
     
@@ -82,7 +90,8 @@ struct SettingsView: View {
             
             Section("General") {
                 Toggle("Launch at Login", isOn: $menuBarState.autoLaunchEnabled)
-                
+                Toggle("Auto-Check for Updates", isOn: $autoCheckForUpdates)
+
                 Picker("Unit Type", selection: $unitType) {
                     Text("Bytes (MB/s)").tag(UnitType.bytes)
                     Text("Bits (Mbps)").tag(UnitType.bits)
@@ -168,10 +177,19 @@ struct SettingsView: View {
                 
 
                 
-                Toggle("Show CPU in Menu Bar", isOn: $menuBarState.showCPUMenu)
-                Toggle("Show Memory in Menu Bar", isOn: $menuBarState.showMemoryMenu)
-                Toggle("Show Disk in Menu Bar", isOn: $menuBarState.showDiskMenu)
-                Toggle("Show Temp in Menu Bar", isOn: $menuBarState.showTempMenu)
+                Text("Pin to Menu Bar — Network").font(.caption).foregroundStyle(.secondary)
+                Toggle("Network Speed", isOn: $showSpeedMenu)
+                Toggle("Signal Strength (RSSI)", isOn: $showRSSIMenu)
+                Toggle("Internet Ping", isOn: $showInternetPingMenu)
+                Toggle("Router Ping", isOn: $showRouterPingMenu)
+                Toggle("DNS Ping", isOn: $showDNSPingMenu)
+
+                Text("Pin to Menu Bar — System").font(.caption).foregroundStyle(.secondary)
+                Toggle("CPU Usage", isOn: $menuBarState.showCPUMenu)
+                Toggle("Memory Usage", isOn: $menuBarState.showMemoryMenu)
+                Toggle("Disk Usage", isOn: $menuBarState.showDiskMenu)
+                Toggle("Temperature", isOn: $menuBarState.showTempMenu)
+                Toggle("Battery Level", isOn: $showBatteryMenu)
             }
             Section("Popover Content") {
                 Toggle("Traffic", isOn: $showTraffic)
@@ -228,7 +246,7 @@ struct SettingsView: View {
 
             
             Section("Support") {
-                Link("Support the Developer", destination: URL(string: "https://support.iad1tya.cyou")!)
+                Link("Support the Developer", destination: URL(string: "https://github.com/iad1tya/Net-Bar")!)
                     .foregroundStyle(.blue)
             }
             }
@@ -236,7 +254,9 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .padding() // Standard padding for the form
         .onAppear {
-            checkForUpdates()
+            if autoCheckForUpdates {
+                checkForUpdates()
+            }
         }
     }
     
