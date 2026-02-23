@@ -4,6 +4,7 @@
 #include <net/if_dl.h>
 #include <net/route.h>
 #include <sys/sysctl.h>
+#include <cstddef>
 
 int NetTrafficStatGenerator::update() {
 
@@ -29,8 +30,21 @@ int NetTrafficStatGenerator::update() {
     uint8_t* data_ptr_cur = sysctl_buffer_ptr;
     uint8_t* const data_ptr_end = sysctl_buffer_ptr + data_bytes;
     while (data_ptr_cur < data_ptr_end) {
+        size_t remaining = static_cast<size_t>(data_ptr_end - data_ptr_cur);
+
+        // Validate minimum size for if_msghdr
+        if (remaining < sizeof(if_msghdr)) {
+            break;
+        }
+
         // Expecting interface data
         if_msghdr* ifmsg = (struct if_msghdr*)data_ptr_cur;
+
+        // Validate ifm_msglen
+        if (ifmsg->ifm_msglen == 0 || ifmsg->ifm_msglen > remaining) {
+            break;
+        }
+
         if (ifmsg->ifm_type != RTM_IFINFO) {
             data_ptr_cur += ifmsg->ifm_msglen;
             continue;
@@ -40,9 +54,21 @@ int NetTrafficStatGenerator::update() {
             data_ptr_cur += ifmsg->ifm_msglen;
             continue;
         }
+        // Validate sockaddr_dl fits within message bounds
+        if (ifmsg->ifm_msglen < sizeof(if_msghdr) + sizeof(sockaddr_dl)) {
+            data_ptr_cur += ifmsg->ifm_msglen;
+            continue;
+        }
         // Only look at link layer items
         sockaddr_dl* sdl = (struct sockaddr_dl*)(ifmsg + 1);
         if (sdl->sdl_family != AF_LINK) {
+            data_ptr_cur += ifmsg->ifm_msglen;
+            continue;
+        }
+        // Validate sdl_nlen within message bounds
+        uint8_t* msg_end = data_ptr_cur + ifmsg->ifm_msglen;
+        if (sdl->sdl_nlen == 0 ||
+            reinterpret_cast<uint8_t*>(sdl->sdl_data) + sdl->sdl_nlen > msg_end) {
             data_ptr_cur += ifmsg->ifm_msglen;
             continue;
         }

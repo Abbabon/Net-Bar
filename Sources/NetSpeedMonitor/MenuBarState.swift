@@ -29,12 +29,21 @@ class MenuBarState: ObservableObject {
     @AppStorage("characterSpacing") var characterSpacing: Double = 0.0
     @AppStorage("unstackNetworkUsage") var unstackNetworkUsage: Bool = false
     
+    @AppStorage("showSpeedMenu") var showSpeedMenu: Bool = true
+
     @AppStorage("showCPUMenu") var showCPUMenu: Bool = false
     @AppStorage("showMemoryMenu") var showMemoryMenu: Bool = false
     @AppStorage("showDiskMenu") var showDiskMenu: Bool = false
     @AppStorage("showTempMenu") var showTempMenu: Bool = false
+
+    @AppStorage("showRSSIMenu") var showRSSIMenu: Bool = false
+    @AppStorage("showRouterPingMenu") var showRouterPingMenu: Bool = false
+    @AppStorage("showDNSPingMenu") var showDNSPingMenu: Bool = false
+    @AppStorage("showInternetPingMenu") var showInternetPingMenu: Bool = false
+    @AppStorage("showBatteryMenu") var showBatteryMenu: Bool = false
     
     @Published var menuText = ""
+    @Published var isConnected: Bool = true
     
     // Use @Published with manual UserDefaults sync for these critical values
     @Published var totalUpload: Double = 0.0 {
@@ -52,7 +61,8 @@ class MenuBarState: ObservableObject {
             text: menuText,
             font: .monospacedSystemFont(ofSize: fontSize, weight: .semibold),
             spacing: textSpacing,
-            kern: characterSpacing
+            kern: characterSpacing,
+            isConnected: isConnected
         )
     }
     
@@ -64,6 +74,7 @@ class MenuBarState: ObservableObject {
     private var primaryInterface: String?
     private var netTrafficStat = NetTrafficStatReceiver()
     private var systemStatsService = SystemStatsService.shared
+    private var networkStatsService = NetworkStatsService.shared
     
     @Published var downloadHistory: [Double] = []
     @Published var uploadHistory: [Double] = []
@@ -77,6 +88,25 @@ class MenuBarState: ObservableObject {
     private let byteMetrics: [String] = [" B", "KB", "MB", "GB", "TB"]
     private let bitMetrics: [String] = [" b", "Kb", "Mb", "Gb", "Tb"]
     
+    private func checkInternetReachability() -> Bool {
+        var zeroAddress = sockaddr_in()
+        zeroAddress.sin_len = UInt8(MemoryLayout.size(ofValue: zeroAddress))
+        zeroAddress.sin_family = sa_family_t(AF_INET)
+
+        guard let reachability = withUnsafePointer(to: &zeroAddress, {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                SCNetworkReachabilityCreateWithAddress(nil, $0)
+            }
+        }) else { return false }
+
+        var flags: SCNetworkReachabilityFlags = []
+        if !SCNetworkReachabilityGetFlags(reachability, &flags) { return false }
+
+        let isReachable = flags.contains(.reachable)
+        let needsConnection = flags.contains(.connectionRequired)
+        return isReachable && !needsConnection
+    }
+
     private func findPrimaryInterface() -> String? {
         let storeRef = SCDynamicStoreCreate(nil, "FindCurrentInterfaceIpMac" as CFString, nil, nil)
         let global = SCDynamicStoreCopyValue(storeRef, "State:/Network/Global/IPv4" as CFString)
@@ -132,6 +162,10 @@ class MenuBarState: ObservableObject {
     private func startTimer() {
         let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
                 guard let self = self else { return }
+                let osReachable = self.checkInternetReachability()
+                let netStats = self.networkStatsService.stats
+                let pingHealthy = netStats.loss < 100 && netStats.ping < 1000
+                self.isConnected = osReachable && pingHealthy
                 self.primaryInterface = self.findPrimaryInterface()
                 if (self.primaryInterface == nil) { return }
                 
@@ -152,20 +186,36 @@ class MenuBarState: ObservableObject {
                         let (downVal, downUnit) = self.formatSpeed(self.downloadSpeed)
                         let (upVal, upUnit) = self.formatSpeed(self.uploadSpeed)
                         
-                        var networkSegments: [String] = []
-                        
-                        if self.displayMode == .both || self.displayMode == .uploadOnly {
-                            networkSegments.append("\(self.showArrows ? "↑ " : "")\(upVal) \(upUnit)")
-                        }
-                        
-                        if self.displayMode == .both || self.displayMode == .downloadOnly {
-                            networkSegments.append("\(self.showArrows ? "↓ " : "")\(downVal) \(downUnit)")
-                        }
-                        
-                        var text = networkSegments.joined(separator: self.unstackNetworkUsage ? " | " : "\n")
-                        
-                        // System Stats
+                        // Pinned Stats
                         var statsList: [String] = []
+
+                        // Network Speed (pinnable, default on)
+                        if self.showSpeedMenu {
+                            var speedParts: [String] = []
+                            if self.displayMode == .both || self.displayMode == .uploadOnly {
+                                speedParts.append("\(self.showArrows ? "↑ " : "")\(upVal) \(upUnit)")
+                            }
+                            if self.displayMode == .both || self.displayMode == .downloadOnly {
+                                speedParts.append("\(self.showArrows ? "↓ " : "")\(downVal) \(downUnit)")
+                            }
+                            statsList.append(speedParts.joined(separator: self.unstackNetworkUsage ? " " : "\n"))
+                        }
+
+                        // Network stats
+                        if self.showRSSIMenu {
+                            statsList.append("RSSI: \(netStats.rssi)")
+                        }
+                        if self.showRouterPingMenu {
+                            statsList.append("RTR: \(netStats.routerLoss == 100 ? "---" : String(format: "%.0fms", netStats.routerPing))")
+                        }
+                        if self.showDNSPingMenu {
+                            statsList.append("DNS: \(netStats.dnsLoss == 100 ? "---" : String(format: "%.0fms", netStats.dnsPing))")
+                        }
+                        if self.showInternetPingMenu {
+                            statsList.append("Ping: \(netStats.loss == 100 ? "---" : String(format: "%.0fms", netStats.ping))")
+                        }
+
+                        // System stats
                         if self.showCPUMenu {
                             statsList.append("CPU: \(Int(self.systemStatsService.stats.cpuUsage))%")
                         }
@@ -178,15 +228,26 @@ class MenuBarState: ObservableObject {
                         if self.showTempMenu {
                             statsList.append("\(Int(self.systemStatsService.stats.cpuTemperature))°C")
                         }
-                        
-                        let systemStatsText = statsList.joined(separator: " | ")
-                        
-                        if !systemStatsText.isEmpty {
-                            text = text.trimmingCharacters(in: .whitespacesAndNewlines) + " | " + systemStatsText
-                        } else {
-                            text = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if self.showBatteryMenu {
+                            statsList.append("BAT: \(Int(self.systemStatsService.stats.batteryLevel))%")
                         }
-                        
+
+                        let text: String
+                        if !statsList.isEmpty {
+                            // Pinned stats replace the default speed display
+                            text = statsList.joined(separator: " | ")
+                        } else {
+                            // Default: show network speed
+                            var networkSegments: [String] = []
+                            if self.displayMode == .both || self.displayMode == .uploadOnly {
+                                networkSegments.append("\(self.showArrows ? "↑ " : "")\(upVal) \(upUnit)")
+                            }
+                            if self.displayMode == .both || self.displayMode == .downloadOnly {
+                                networkSegments.append("\(self.showArrows ? "↓ " : "")\(downVal) \(downUnit)")
+                            }
+                            text = networkSegments.joined(separator: self.unstackNetworkUsage ? " | " : "\n")
+                        }
+
                         self.menuText = text
                     }
                 }

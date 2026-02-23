@@ -18,11 +18,5 @@
     <string>14.0</string>
     <key>LSUIElement</key>
     <true/> <!-- Hides from Dock, behaves like menu bar app -->
-	<key>NSLocationUsageDescription</key>
-	<string>We need access to your location to display Wi-Fi SSID and signal strength.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We need access to your location to display Wi-Fi SSID and signal strength.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>We need access to your location to display Wi-Fi SSID and signal strength.</string>
 </dict>
 </plist>
