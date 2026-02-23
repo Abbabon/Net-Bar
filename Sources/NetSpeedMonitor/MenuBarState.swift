@@ -162,7 +162,10 @@ class MenuBarState: ObservableObject {
     private func startTimer() {
         let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
                 guard let self = self else { return }
-                self.isConnected = self.checkInternetReachability()
+                let osReachable = self.checkInternetReachability()
+                let netStats = self.networkStatsService.stats
+                let pingHealthy = netStats.loss < 100 && netStats.ping < 1000
+                self.isConnected = osReachable && pingHealthy
                 self.primaryInterface = self.findPrimaryInterface()
                 if (self.primaryInterface == nil) { return }
                 
@@ -199,7 +202,6 @@ class MenuBarState: ObservableObject {
                         }
 
                         // Network stats
-                        let netStats = self.networkStatsService.stats
                         if self.showRSSIMenu {
                             statsList.append("RSSI: \(netStats.rssi)")
                         }
